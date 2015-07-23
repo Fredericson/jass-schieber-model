@@ -13,8 +13,8 @@ public class SchieberTableInfo {
 
 	private PlayerNumber cardRequestedPlayerNumber;
 
-	private int pointsTeam1;
-	private int pointsTeam2;
+	private SchieberScore allStichThisRound;
+	private SchieberScore allCompletedGames;
 
 	public PlayerOnTable getPlayer1() {
 		return players[0];
@@ -57,22 +57,6 @@ public class SchieberTableInfo {
 		}
 	}
 
-	public int getPointsTeam1() {
-		return pointsTeam1;
-	}
-
-	public void addPointsTeam1(final int points) {
-		pointsTeam1 += points;
-	}
-
-	public int getPointsTeam2() {
-		return pointsTeam2;
-	}
-
-	public void setPointsTeam2(final int points) {
-		pointsTeam2 += points;
-	}
-
 	public Trumpf getActualTrumpf() {
 		return actualTrumpf;
 	}
@@ -87,7 +71,7 @@ public class SchieberTableInfo {
 
 	public void setActualTrumpfablePlayer(final PlayerNumber actualTrumpfablePlayer) {
 		this.actualTrumpfablePlayer = actualTrumpfablePlayer;
-		this.cardRequestedPlayerNumber = PlayerNumber.PLAYER_1;
+		this.cardRequestedPlayerNumber = actualTrumpfablePlayer;
 	}
 
 	public PlayerNumber getCardRequestedPlayerNumber() {
@@ -107,10 +91,14 @@ public class SchieberTableInfo {
 		this.cardRequestedPlayerNumber = PlayerNumber.next(cardRequestedPlayerNumber);
 	}
 
+	public void setCompletedGameScore(final SchieberScore score) {
+		this.allCompletedGames.add(score);
+		this.allStichThisRound.clear();
+	}
+
 	public void setStich(final SchieberStich stich) {
 		this.cardRequestedPlayerNumber = stich.getWinner();
-		this.pointsTeam1 += stich.getPointsTeam1();
-		this.pointsTeam2 += stich.getPointsTeam2();
+		this.allStichThisRound.add(stich);
 		removeAllPlayedCards();
 	}
 

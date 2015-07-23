@@ -84,7 +84,7 @@ public abstract class PlayerAction extends Player implements SchieberMessageRece
 	}
 
 	/**
-	 * If the Player is the first in the round
+	 * If the Player is the first in the round the requested Color will be null
 	 * 
 	 * @param requestedColor
 	 * @return Card
