@@ -8,20 +8,25 @@ import ch.jass.model.Card;
 import ch.jass.model.Color;
 import ch.jass.model.Player;
 import ch.jass.model.Trumpf;
-import ch.jass.model.schieber.api.SchieberMessageReceiver;
+import ch.jass.model.schieber.api.SchieberPlayerCallback;
+import ch.jass.model.schieber.api.SchieberServerService;
 import ch.jass.model.schieber.table.PlayerNumber;
 import ch.jass.model.schieber.table.SchieberStich;
 import ch.jass.model.schieber.table.SchieberTableInfo;
 
-public abstract class PlayerAction extends Player implements SchieberMessageReceiver {
+public abstract class SchieberPlayer extends Player implements SchieberPlayerCallback {
+
+	// Connection to communicate with Server
+	protected final SchieberServerService schieberService;
 
 	// Each Player has information about what is visible on the Table
 	protected SchieberTableInfo schieberTableInfo;
 	private final Set<Card> trumpfCards = new HashSet<Card>();
 	private final Set<Card> otherCards = new HashSet<Card>();
 
-	public PlayerAction(final String name) {
+	public SchieberPlayer(final SchieberServerService schieberService, final String name) {
 		super(name);
+		this.schieberService = schieberService;
 	}
 
 	public SchieberTableInfo getJassTableInfo() {
@@ -29,17 +34,17 @@ public abstract class PlayerAction extends Player implements SchieberMessageRece
 	}
 
 	@Override
-	public void receiveTeams(final SchieberTableInfo schieberTableInfo) {
+	public void broadcastTeams(final SchieberTableInfo schieberTableInfo) {
 		this.schieberTableInfo = schieberTableInfo;
 	}
 
 	@Override
-	public void receiveCards(final Set<Card> cards) {
+	public void dealCards(final Set<Card> cards) {
 		this.otherCards.addAll(cards);
 	}
 
 	@Override
-	public void receiveTrumpfForGame(final Trumpf trumpf) {
+	public void broadcastTrumpfForGame(final Trumpf trumpf) {
 		schieberTableInfo.setActualTrumpf(trumpf);
 		Color trumpfColor = trumpf.getColor();
 		if (trumpfColor == null) {
@@ -83,26 +88,8 @@ public abstract class PlayerAction extends Player implements SchieberMessageRece
 		return cardsForRequestedColor;
 	}
 
-	/**
-	 * If the Player is the first in the round the requested Color will be null
-	 * 
-	 * @param requestedColor
-	 * @return Card
-	 */
 	@Override
-	public abstract Card chooseCard(Color requestedColor);
-
-	/**
-	 * Return null means shifted.
-	 * 
-	 * @param geschoben
-	 * @return Trumpf
-	 */
-	@Override
-	public abstract Trumpf chooseTrumpf(boolean geschoben);
-
-	@Override
-	public void receivePlayedCard(final Card card) {
+	public void broadcastPlayedCard(final Card card) {
 		trumpfCards.remove(card);
 		otherCards.remove(card);
 		rememberPlayedCard(card);
@@ -112,12 +99,12 @@ public abstract class PlayerAction extends Player implements SchieberMessageRece
 	protected abstract void rememberPlayedCard(Card card);
 
 	@Override
-	public void receiveTrumpfablePlayer(final PlayerNumber actualTrumpfablePlayer) {
+	public void broadcastTrumpfablePlayer(final PlayerNumber actualTrumpfablePlayer) {
 		this.schieberTableInfo.setActualTrumpfablePlayer(actualTrumpfablePlayer);
 	}
 
 	@Override
-	public void receiveStich(final SchieberStich stich) {
+	public void broadcastStich(final SchieberStich stich) {
 		this.schieberTableInfo.setStich(stich);
 	}
 }
