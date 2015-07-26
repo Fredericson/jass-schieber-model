@@ -11,8 +11,11 @@ import ch.jass.model.Trumpf;
 import ch.jass.model.schieber.api.SchieberPlayerCallback;
 import ch.jass.model.schieber.api.SchieberServerService;
 import ch.jass.model.schieber.table.PlayerNumber;
+import ch.jass.model.schieber.table.PlayerOnTable;
+import ch.jass.model.schieber.table.SchieberScore;
 import ch.jass.model.schieber.table.SchieberStich;
 import ch.jass.model.schieber.table.SchieberTableInfo;
+import ch.jass.model.schieber.table.TeamScore;
 
 public abstract class SchieberPlayer extends Player implements SchieberPlayerCallback {
 
@@ -20,7 +23,7 @@ public abstract class SchieberPlayer extends Player implements SchieberPlayerCal
 	protected final SchieberServerService schieberService;
 
 	// Each Player has information about what is visible on the Table
-	protected SchieberTableInfo schieberTableInfo;
+	protected SchieberTableInfo schieberTableInfo = new SchieberTableInfo();
 	private final Set<Card> trumpfCards = new HashSet<Card>();
 	private final Set<Card> otherCards = new HashSet<Card>();
 
@@ -29,8 +32,17 @@ public abstract class SchieberPlayer extends Player implements SchieberPlayerCal
 		this.schieberService = schieberService;
 	}
 
-	public SchieberTableInfo getJassTableInfo() {
+	public void connectToServer() {
+		this.schieberService.connectToServer(this);
+	}
+
+	public SchieberTableInfo getSchieberTableInfo() {
 		return schieberTableInfo;
+	}
+
+	@Override
+	public void broadcastJoinedPlayer(final PlayerOnTable playerOnTable) {
+		schieberTableInfo.addPlayer(playerOnTable);
 	}
 
 	@Override
@@ -107,4 +119,15 @@ public abstract class SchieberPlayer extends Player implements SchieberPlayerCal
 	public void broadcastStich(final SchieberStich stich) {
 		this.schieberTableInfo.setStich(stich);
 	}
+
+	@Override
+	public void broadcastGameFinished(final SchieberScore pointsWonAllTeams) {
+		// Not yet parsed in Backend
+	}
+
+	@Override
+	public void broadcastWinnerTeam(final TeamScore pointsWonByWinnerTeam) {
+		// Not yet parsed in Backend
+	}
+
 }
