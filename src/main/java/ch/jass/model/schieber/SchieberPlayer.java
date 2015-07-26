@@ -8,6 +8,7 @@ import ch.jass.model.Card;
 import ch.jass.model.Color;
 import ch.jass.model.Player;
 import ch.jass.model.Trumpf;
+import ch.jass.model.TrumpfRank;
 import ch.jass.model.schieber.api.SchieberPlayerCallback;
 import ch.jass.model.schieber.api.SchieberServerService;
 import ch.jass.model.schieber.table.PlayerNumber;
@@ -24,7 +25,7 @@ public abstract class SchieberPlayer extends Player implements SchieberPlayerCal
 
 	// Each Player has information about what is visible on the Table
 	protected SchieberTableInfo schieberTableInfo = new SchieberTableInfo();
-	private final Set<Card> trumpfCards = new HashSet<Card>();
+	private final Set<TrumpfRank> trumpfCards = new HashSet<TrumpfRank>();
 	private final Set<Card> otherCards = new HashSet<Card>();
 
 	public SchieberPlayer(final SchieberServerService schieberService, final String name) {
@@ -62,13 +63,43 @@ public abstract class SchieberPlayer extends Player implements SchieberPlayerCal
 		if (trumpfColor == null) {
 			return;
 		}
-		trumpfCards.addAll(getOtherCards(trumpfColor));
+		Set<Card> trumpfCards = getOtherCards(trumpfColor);
+		this.trumpfCards.addAll(getTrumpfRanks(trumpfCards));
 		otherCards.removeAll(trumpfCards);
 	}
 
-	public Card getHighestTrumpfCard() {
-		Card highest = null;
-		for (Card card : trumpfCards) {
+	public boolean canPlayTrumpf() {
+		if (trumpfCards.size() > 0 && isOverTrumpfPossible()) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	private Set<TrumpfRank> getTrumpfRanks(final Set<Card> cards) {
+		Set<TrumpfRank> trumpfCards = new HashSet<TrumpfRank>();
+		for (Card card : cards) {
+			trumpfCards.add(card.getTrumpfRank());
+		}
+		return trumpfCards;
+	}
+
+	private boolean isOverTrumpfPossible() {
+		TrumpfRank highestTrumpfRankOnTable = getSchieberTableInfo().getHighestTrumpfRankOnTable();
+		if (highestTrumpfRankOnTable == null) {
+			return true;
+		}
+		TrumpfRank myHighestTrumpfRank = getHighestTrumpfRank();
+		if (myHighestTrumpfRank.ordinal() > highestTrumpfRankOnTable.ordinal()) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	private TrumpfRank getHighestTrumpfRank() {
+		TrumpfRank highest = null;
+		for (TrumpfRank card : trumpfCards) {
 			if (highest == null || card.getRank().ordinal() > highest.getRank().ordinal()) {
 				highest = card;
 			}
@@ -76,8 +107,33 @@ public abstract class SchieberPlayer extends Player implements SchieberPlayerCal
 		return highest;
 	}
 
+	public Card getHighestTrumpfCard() {
+		TrumpfRank highest = getHighestTrumpfRank();
+		if (highest == null) {
+			return null;
+		} else {
+			return Card.getCard(schieberTableInfo.getActualTrumpf().getColor(), highest);
+		}
+	}
+
 	public Set<Card> getTrumpfCards() {
-		return Collections.unmodifiableSet(trumpfCards);
+		Set<Card> trumpfCards = new HashSet<Card>();
+		for (TrumpfRank trumpfRank : this.trumpfCards) {
+			trumpfCards.add(Card.getCard(schieberTableInfo.getActualTrumpf().getColor(), trumpfRank));
+		}
+		return trumpfCards;
+	}
+
+	private Set<Card> getMappedTrumpfCards() {
+		Set<Card> mappedTrumpfCards = new HashSet<Card>();
+		Trumpf trumpf = schieberTableInfo.getActualTrumpf();
+		if (trumpf.getColor() == null) {
+			return mappedTrumpfCards;
+		}
+		for (TrumpfRank trumpfRank : trumpfCards) {
+			mappedTrumpfCards.add(Card.getCard(trumpf.getColor(), trumpfRank));
+		}
+		return mappedTrumpfCards;
 	}
 
 	protected Set<Card> getOtherCards() {
@@ -85,8 +141,8 @@ public abstract class SchieberPlayer extends Player implements SchieberPlayerCal
 	}
 
 	public Set<Card> getAllCards() {
-		Set<Card> cards = new HashSet<Card>(trumpfCards);
-		cards.addAll(otherCards);
+		Set<Card> cards = new HashSet<Card>(otherCards);
+		cards.addAll(getMappedTrumpfCards());
 		return cards;
 	}
 
@@ -102,7 +158,9 @@ public abstract class SchieberPlayer extends Player implements SchieberPlayerCal
 
 	@Override
 	public void broadcastPlayedCard(final Card card) {
-		trumpfCards.remove(card);
+		if (card.getColor().equals(schieberTableInfo.getActualTrumpfColor())) {
+			trumpfCards.remove(card.getTrumpfRank());
+		}
 		otherCards.remove(card);
 		rememberPlayedCard(card);
 		schieberTableInfo.setPlayedCard(card);
@@ -129,5 +187,4 @@ public abstract class SchieberPlayer extends Player implements SchieberPlayerCal
 	public void broadcastWinnerTeam(final TeamScore pointsWonByWinnerTeam) {
 		// Not yet parsed in Backend
 	}
-
 }

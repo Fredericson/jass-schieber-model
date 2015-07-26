@@ -39,8 +39,16 @@ public enum Card {
 		return rank;
 	}
 
+	public TrumpfRank getTrumpfRank() {
+		return TrumpfRank.getTrumpfRank(rank);
+	}
+
 	private final Color color;
 	private final Rank rank;
+
+	public static Card getCard(final Color color, final TrumpfRank trumpfRank) {
+		return getCard(color, trumpfRank.getRank());
+	}
 
 	public static Card getCard(final Color color, final Rank rank) {
 		for (Card card : values()) {
@@ -48,6 +56,7 @@ public enum Card {
 				return card;
 			}
 		}
-		throw new IllegalStateException("No Card was found for: " + color + ", " + rank);
+		throw new IllegalStateException("No Card was found for color=" + color + ", trumpfRank=" + rank);
 	}
+
 }

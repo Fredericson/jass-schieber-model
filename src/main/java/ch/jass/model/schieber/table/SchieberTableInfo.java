@@ -1,8 +1,13 @@
 package ch.jass.model.schieber.table;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import ch.jass.model.Card;
+import ch.jass.model.Color;
 import ch.jass.model.Rank;
 import ch.jass.model.Trumpf;
+import ch.jass.model.TrumpfRank;
 
 public class SchieberTableInfo {
 
@@ -57,6 +62,13 @@ public class SchieberTableInfo {
 		}
 	}
 
+	public Color getActualTrumpfColor() {
+		if (actualTrumpf.getColor() == null) {
+			return null;
+		}
+		return actualTrumpf.getColor();
+	}
+
 	public Trumpf getActualTrumpf() {
 		return actualTrumpf;
 	}
@@ -108,14 +120,26 @@ public class SchieberTableInfo {
 		}
 	}
 
-	public Rank getHighestTrumpfRankOnTable() {
-		Rank actualRank = null;
+	public List<Card> getAllPlayedCards() {
+		List<Card> allPlayedCards = new ArrayList<Card>();
 		for (PlayerOnTable player : players) {
-			if (didPlayTrumpf(player)) {
-				actualRank = getHigherRank(actualRank, player);
+			if (player.getPlayedCard() != null) {
+				allPlayedCards.add(player.getPlayedCard());
 			}
 		}
-		return actualRank;
+		return allPlayedCards;
+	}
+
+	public TrumpfRank getHighestTrumpfRankOnTable() {
+		TrumpfRank actualHighestTrumpfRank = null;
+		for (PlayerOnTable player : players) {
+			if (didPlayTrumpf(player)) {
+				Rank rankFromPlayedCard = player.getPlayedCard().getRank();
+				TrumpfRank fromPlayer = TrumpfRank.getTrumpfRank(rankFromPlayedCard);
+				actualHighestTrumpfRank = getHigherTrumpfRank(actualHighestTrumpfRank, fromPlayer);
+			}
+		}
+		return actualHighestTrumpfRank;
 	}
 
 	private boolean didPlayTrumpf(final PlayerOnTable player) {
@@ -126,18 +150,18 @@ public class SchieberTableInfo {
 		return playedCard.getColor() == actualTrumpf.getColor();
 	}
 
-	private Rank getHigherRank(final Rank actualRank, final PlayerOnTable player) {
-		if (player.getPlayedCard() == null) {
-			return actualRank;
+	private TrumpfRank getHigherTrumpfRank(final TrumpfRank actualHighestTrumpfRank,
+			final TrumpfRank trumpfRankFromPlayer) {
+		if (trumpfRankFromPlayer == null) {
+			throw new IllegalStateException("When the player die play trumpf is Rank should not be null!");
 		}
-		Rank playedRank = player.getPlayedCard().getRank();
-		if (actualRank == null) {
-			return playedRank;
+		if (actualHighestTrumpfRank == null) {
+			return trumpfRankFromPlayer;
 		}
-		if (playedRank.ordinal() > actualRank.ordinal()) {
-			return playedRank;
+		if (actualHighestTrumpfRank.ordinal() > trumpfRankFromPlayer.ordinal()) {
+			return actualHighestTrumpfRank;
 		} else {
-			return actualRank;
+			return trumpfRankFromPlayer;
 		}
 	}
 }
