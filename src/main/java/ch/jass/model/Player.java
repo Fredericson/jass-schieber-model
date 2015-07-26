@@ -5,9 +5,10 @@ public class Player {
 	private final String name;
 
 	/**
-	 * Called from PlayerWithConnection
+	 * Represents a Player which is not yet ready to play on a table.
 	 * 
-	 * @param playerName
+	 * @param name
+	 *            the name of the Player
 	 */
 	public Player(final String name) {
 		this.name = name;
