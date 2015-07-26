@@ -13,8 +13,8 @@ public class SchieberTableInfo {
 
 	private PlayerNumber cardRequestedPlayerNumber;
 
-	private SchieberScore allStichThisRound;
-	private SchieberScore allCompletedGames;
+	private final SchieberScore allStichThisRound = new SchieberScore();
+	private final SchieberScore allCompletedGames = new SchieberScore();
 
 	public PlayerOnTable getPlayer1() {
 		return players[0];
